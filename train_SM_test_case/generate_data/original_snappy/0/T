@@ -1,0 +1,42 @@
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      T;
+}
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 288.15;  // Initialize with inlet temperature
+
+boundaryField
+{
+    geometry_inlet
+    {
+        type            fixedValue;
+        value           uniform 288.15;  // 15°C air at inlet
+    }
+
+    geometry_outlet
+    {
+        type            zeroGradient;   // Convective outflow
+    }
+
+    geometry_top
+    {
+        type            zeroGradient;   // Adiabatic wall (no heat flux)
+    }
+
+    geometry_obstacle
+    {
+        type            fixedValue;
+        value           uniform 373.15;  // 100°C obstacle
+    }
+
+    up
+    {
+        type            empty;  // For 2D case
+    }
+}
