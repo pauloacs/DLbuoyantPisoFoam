@@ -117,7 +117,7 @@ volScalarField delta_p_rgh
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedScalar("delta_p_rgh", dimensionSet(0,2,-2,0,0,0,0), 0.0)
@@ -131,7 +131,7 @@ volVectorField delta_U_prev
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedVector("delta_U_prev", dimensionSet(0,1,-1,0,0,0,0), vector::zero)
@@ -146,7 +146,7 @@ volVectorField U_prev
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedVector("U_prev", dimensionSet(0,1,-1,0,0,0,0), vector::zero)
@@ -160,7 +160,7 @@ volScalarField p_rgh_prev
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedScalar("p_rgh_prev", dimensionSet(0,2,-2,0,0,0,0), 0.0)
@@ -175,7 +175,7 @@ volScalarField delta_p_rgh_CFD
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedScalar("delta_p_rgh_CFD", dimensionSet(0,2,-2,0,0,0,0), 0.0)
@@ -189,7 +189,7 @@ volVectorField delta_U
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedVector("delta_U", dimensionSet(0,1,-1,0,0,0,0), vector::zero)
@@ -203,7 +203,7 @@ volScalarField rho_prev
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedScalar("rho_prev", dimensionSet(0,1,-3,0,0,0,0), 0.0)
@@ -217,7 +217,7 @@ volScalarField delta_rho
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
-        IOobject::AUTO_WRITE
+        IOobject::NO_WRITE
     ),
     mesh,
     dimensionedScalar("delta_rho", dimensionSet(0,1,-3,0,0,0,0), 0.0)

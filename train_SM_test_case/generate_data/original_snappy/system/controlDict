@@ -23,13 +23,13 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         25;//we stop after 5 s - adjustableRunTime!
+endTime         0.2;//we stop after 5 s - adjustableRunTime!
 
 deltaT          0.001;//initial time step size
 
 writeControl    adjustableRunTime;//simulation can automatically adjust the time step according to the Courant number
 
-writeInterval   0.5;//we write out every 0.05 s
+writeInterval   0.1;//we write out every 0.05 s
 
 purgeWrite      0;
 

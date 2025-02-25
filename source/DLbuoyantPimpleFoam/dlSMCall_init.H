@@ -66,7 +66,7 @@ forAll(p.internalField(), id) // for boundary field use u_.boundaryField()
         input_vals[id][4] = C[id].y();
         input_vals[id][5] = delta_U_prev[id].x();
         input_vals[id][6] = delta_U_prev[id].y();
-        input_vals[id][7] = delta_p_CFD[id];
+        input_vals[id][7] = delta_p_rgh_CFD[id];
 }
 
 forAll(p.boundaryField()[obst_patchID], id)

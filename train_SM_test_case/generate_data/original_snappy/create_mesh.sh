@@ -6,6 +6,8 @@ fi
 surfaceMeshTriangulate constant/triSurface/geometry.stl
 surfaceFeatures
 rm -r constant/polyMesh
+# Run this instead if you want a coarse mesh
+#blockMesh -dict system/blockMeshDict_block_coarse
 blockMesh -dict system/blockMeshDict_block
 snappyHexMesh -overwrite
 extrudeMesh
