@@ -1,6 +1,6 @@
 import argparse
-from pressureSM_deltas.train import main_train
-from pressureSM_deltas.SM_call import call_SM_main
+from pressureSM.train_and_eval.train import main_train
+from pressureSM.train_and_eval.SM_call import call_SM_main
 
 def train_entry_point():
     parser = argparse.ArgumentParser(description='Train your Surrogate Model.')
@@ -46,7 +46,7 @@ def train_entry_point():
                         help='Standardization method')
     parser.add_argument('--block_size', type=int, default=128,
                         help='Block size')
-    parser.add_argument('--delta', type=float, default=5e-3,
+    parser.add_argument('--delta', type=float, default=2.5e-4,
                         help='Delta value')
     parser.add_argument('--max_num_PC', type=int, default=512,
                         help='Max number of PCs')
@@ -86,13 +86,13 @@ def eval_entry_point():
                         help='Number of timesteps')
 
     # Optional arguments
-    parser.add_argument('--delta', type=float, default=5e-3,
+    parser.add_argument('--delta', type=float, default=2.5e-4,
                         help='Delta value')
     parser.add_argument('--shape', type=int, default=128,
                         help='Shape value')
     parser.add_argument('--overlap_ratio', type=float, default=0.25,
                         help='Overlap ratio')
-    parser.add_argument('--max_num_PC', type=int, default=128,
+    parser.add_argument('--max_num_PC', type=int, default=512,
                         help='Max number of PCs')
     parser.add_argument('--standardization_method', type=str, default='std',
                         help='Standardization method')

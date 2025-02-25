@@ -16,6 +16,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.neighbors import KDTree
+import sklearn
 from shapely.geometry import MultiPoint
 from scipy.spatial import distance
 

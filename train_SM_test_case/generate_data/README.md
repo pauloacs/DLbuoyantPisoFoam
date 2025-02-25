@@ -25,3 +25,20 @@
       ```bash
       ./dataset_gen.py
       ```
+
+
+## Simulation details
+
+# Domain
+Domain L = 0.75
+Height between plates H = 0.1
+Distance from inlet to obstacle d = 0.2
+
+# Obstacle - plate
+plate length - L
+angle of attack - alpha
+
+# Thermophysical properties
+Air: 
+Cp = 1005
+...

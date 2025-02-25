@@ -7,10 +7,14 @@ import random
 scale = 2
 grading = 3
 
-L = [0.5]*10 + [0.75]*10 + [1]*10 + [1.25]*10 + [1.5]*10
-b = [0.05]*50
-alpha = [-85, -80, -70, -60, -50, -40, -30, -20, -10, -5]*5
-x_cord = [4]*50
+# Regarding the channel lengths, it is defined in the gen_blockMeshDict_plate
+# Those are domain_length = 0.75, domain_height = 0.1
+
+# These are plate lengths - L, b
+L = [0.025]*4 + [0.05]*4 + [0.075]*4
+b = [0.0025]*12
+alpha = [80, 60, 40, 20]*3
+x_cord = [0.2]*12
 
 num_runs = len(L)
 sim_data_path = 'simulation_data'

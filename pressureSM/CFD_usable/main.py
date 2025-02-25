@@ -253,7 +253,7 @@ def py_func(array_in, U_max_norm):
 		#U_max_norm = np.max( np.sqrt( np.square(array[...,0:1]) + np.square(array[...,1:2]) ) )
 
 		deltaU = array[...,0:2]
-		deltaPho = array[...,2:3]
+		delta_rho = array[...,2:3]
 		deltaU_prev = array[...,5:7]
 		deltaP_prev = array[...,7]
 
@@ -272,7 +272,7 @@ def py_func(array_in, U_max_norm):
 
 		deltaUx_interp = interpolate_fill(deltaUx_adim, vert_OFtoNP, weights_OFtoNP)
 		deltaUy_interp = interpolate_fill(deltaUy_adim, vert_OFtoNP, weights_OFtoNP)
-		deltaPho_interp = interpolate_fill(deltaPho, vert_OFtoNP, weights_OFtoNP)
+		delta_rho_interp = interpolate_fill(delta_rho, vert_OFtoNP, weights_OFtoNP)
 		deltaU_changed_interp = interpolate_fill(deltaU_changed, vert_OFtoNP, weights_OFtoNP)
 		deltaP_prev_interp = interpolate_fill(deltaP_prev, vert_OFtoNP, weights_OFtoNP)
 
@@ -286,7 +286,7 @@ def py_func(array_in, U_max_norm):
 		# Rearrange interpolated 1D arrays into 2D arrays
 		grid[0, :, :, 0:1][tuple(indices.T)] = deltaUx_interp.reshape(deltaUx_interp.shape[0], 1)
 		grid[0, :, :, 1:2][tuple(indices.T)] = deltaUy_interp.reshape(deltaUy_interp.shape[0], 1)
-		grid[0, :, :, 2:3][tuple(indices.T)] = deltaPho_interp.reshape(deltaPho_interp.shape[0], 1)
+		grid[0, :, :, 2:3][tuple(indices.T)] = delta_rho_interp.reshape(delta_rho_interp.shape[0], 1)
 		grid[0, :, :, 3:4] = sdfunct
 
 		deltaP_prev_grid = np.zeros(shape=(shape_y, shape_x))

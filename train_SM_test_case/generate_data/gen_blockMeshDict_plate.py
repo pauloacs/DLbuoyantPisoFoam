@@ -13,8 +13,8 @@ def gen_blockMeshDict(x_cord, L, b, alpha, cell_scale, grading):
     z = 0.05
     x_orig = 0
     y_orig = 0
-    x_max = 15
-    y_max = 1
+    x_max = 0.75
+    y_max = 0.05
 
     x_cord = x_cord
     alpha = math.pi*alpha/180
@@ -42,11 +42,11 @@ def gen_blockMeshDict(x_cord, L, b, alpha, cell_scale, grading):
     plt.legend()
     #plt.show()
     
-    x_cell = int(A_cords[0] * cell_scale*20)
-    x_cell2 = int((x_max - A_cords[0]) * cell_scale*20)
-    y_cellAB = int((A_cords[1] - B_cords[1]) * cell_scale*20*3)
-    y_cellBD = int((B_cords[1] - D_cords[1]) * cell_scale*20*3)
-    y_cell2 = int((y_max - A_cords[1]) * cell_scale*20 *2)
+    x_cell = int(A_cords[0] * cell_scale*200)
+    x_cell2 = int((x_max - A_cords[0]) * cell_scale*200)
+    y_cellAB = int((A_cords[1] - B_cords[1]) * cell_scale*200*3)
+    y_cellBD = int((B_cords[1] - D_cords[1]) * cell_scale*200*3)
+    y_cell2 = int((y_max - A_cords[1]) * cell_scale*200 *2)
 
     # Open file
     f = open("blockMeshDict", "w")

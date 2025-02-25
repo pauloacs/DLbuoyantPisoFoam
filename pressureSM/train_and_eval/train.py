@@ -97,9 +97,9 @@ class Training:
             i_range = [int(ii - self.block_size/2), int( ii + self.block_size/2) ]
             j_range = [int(jj - self.block_size/2), int( jj + self.block_size/2) ]
 
-            x_u = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 0:2 ]
-            x_obst = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 2:3 ]
-            y = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 3:4 ]
+            x_u = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 0:3 ]
+            x_obst = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 3:4 ]
+            y = grid[0, i_range[0]:i_range[1] , j_range[0]:j_range[1] , 4:5 ]
 
             # Remove all the blocks with delta_U = 0 and delta_p = 0
             if not ((x_u == 0).all() and (y == 0).all()):
@@ -192,15 +192,19 @@ class Training:
     """
     """
 
-    Ux = data_limited[...,0:1] #values
-    Uy = data_limited[...,1:2] #values
+    Ux = data_limited[...,0:1]
+    Uy = data_limited[...,1:2]
+    rho = data_limited[...,12:13]
 
-    delta_p = data_limited[...,7:8] #values
-    delta_Ux = data_limited[...,5:6] #values
-    delta_Uy = data_limited[...,6:7] #values
+    delta_p = data_limited[...,7:8]
+    delta_Ux = data_limited[...,5:6]
+    delta_Uy = data_limited[...,6:7]
+    delta_rho = data_limited[...,11:12]
 
     U_max_norm = np.max(np.sqrt(np.square(Ux) + np.square(Uy)))
     deltaU_max_norm = np.max(np.sqrt(np.square(delta_Ux) + np.square(delta_Uy)))
+    max_rho = rho.max()
+
     # Ignore time steps with minimal changes ...
     # there is not point in computing error metrics for these
     # it would exagerate the delta_p errors and give ~0% errors in p
@@ -217,17 +221,20 @@ class Training:
     delta_p_adim = delta_p/pow(U_max_norm,2.0) 
     delta_Ux_adim = delta_Ux/U_max_norm 
     delta_Uy_adim = delta_Uy/U_max_norm 
+    delta_rho_adim = delta_rho/max_rho
 
     delta_p_interp = utils.interpolate_fill(delta_p_adim, vert, weights) #compared to the griddata interpolation 
     delta_Ux_interp = utils.interpolate_fill(delta_Ux_adim, vert, weights)#takes virtually no time  because "vert" and "weigths" where already calculated
     delta_Uy_interp = utils.interpolate_fill(delta_Uy_adim, vert, weights)
+    delta_rho_interp = utils.interpolate_fill(delta_rho_adim, vert, weights)
 
     # 1D vectors to 2D arrays
-    grid = np.zeros(shape=(1, self.grid_shape_y, self.grid_shape_x, 4))
+    grid = np.zeros(shape=(1, self.grid_shape_y, self.grid_shape_x, 5))
     grid[0,:,:,0:1][tuple(indices.T)] = delta_Ux_interp.reshape(delta_Ux_interp.shape[0],1)
     grid[0,:,:,1:2][tuple(indices.T)] = delta_Uy_interp.reshape(delta_Uy_interp.shape[0],1)
-    grid[0,:,:,2:3] = sdfunct
-    grid[0,:,:,3:4][tuple(indices.T)] = delta_p_interp.reshape(delta_p_interp.shape[0],1)
+    grid[0,:,:,2:3][tuple(indices.T)] = delta_rho_interp.reshape(delta_rho_interp.shape[0],1)
+    grid[0,:,:,3:4] = sdfunct
+    grid[0,:,:,4:5][tuple(indices.T)] = delta_p_interp.reshape(delta_p_interp.shape[0],1)
 
     x_list = []
     obst_list = []
@@ -237,22 +244,22 @@ class Training:
     grid[np.isnan(grid)] = 0
 
     #How many rotations to do:
-    N_rotation = 2
+    N_rotation = 1
     N = int(self.n_samples/N_rotation/(self.last_t-self.first_t))
 
     x_list, obst_list, y_list = self.sample_blocks(grid, x_list, obst_list, y_list, N)
 
     # Rotate and sample
-    grid_y_inverted = grid[:, ::-1, :, :]
-    x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
+    #grid_y_inverted = grid[:, ::-1, :, :]
+    #x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
 
     # Rotate and sample
-#    grid_y_inverted = grid[:, :, ::-1, :]
-#    x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
+    # grid_y_inverted = grid[:, :, ::-1, :]
+    # x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
 
     # Rotate and sample
-#    grid_y_inverted = grid[:, ::-1, ::-1, :]
-#    x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
+    # grid_y_inverted = grid[:, ::-1, ::-1, :]
+    # x_list, obst_list, y_list = self.sample_blocks(grid_y_inverted, x_list, obst_list, y_list, N)
 
     if len(x_list) == 0:
        print('All blocks have been discarded, skipping time step')
@@ -262,15 +269,16 @@ class Training:
     obst_array = np.array(obst_list, dtype = 'float32')
     y_array = np.array(y_list, dtype = 'float32')
 
-    self.max_abs_Ux_list.append(np.max(np.abs(x_array[...,0])))
-    self.max_abs_Uy_list.append(np.max(np.abs(x_array[...,1])))
+    self.max_abs_delta_Ux_list.append(np.max(np.abs(x_array[...,0])))
+    self.max_abs_delta_Uy_list.append(np.max(np.abs(x_array[...,1])))
+    self.max_abs_delta_rho_list.append(np.max(np.abs(x_array[...,2])))
     self.max_abs_dist_list.append(np.max(np.abs(obst_array[...,0])))
 
     # Setting the average pressure in each block to 0
     for step in range(y_array.shape[0]):
       y_array[step,...][obst_array[step,...] != 0] -= np.mean(y_array[step,...][obst_array[step,...] != 0])
     
-    self.max_abs_p_list.append(np.max(np.abs(y_array[...,0])))
+    self.max_abs_delta_p_list.append(np.max(np.abs(y_array[...,0])))
 
     array = np.c_[x_array,obst_array,y_array]
     
@@ -300,7 +308,7 @@ class Training:
     #pathCil, pathRect, pathTria , pathPlate = self.paths[0], self.paths[1], self.paths[2], self.paths[3]
     self.dataset_path = self.paths[0]
 
-    NUM_COLUMNS = 4
+    NUM_COLUMNS = 5
 
     file = tables.open_file(self.filename, mode='w')
     atom = tables.Float32Atom()
@@ -308,21 +316,23 @@ class Training:
     array_c = file.create_earray(file.root, 'data', atom, (0, self.block_size, self.block_size, NUM_COLUMNS))
     file.close()
 
-    self.max_abs_Ux_list = []
-    self.max_abs_Uy_list  = []
+    self.max_abs_delta_Ux_list = []
+    self.max_abs_delta_Uy_list  = []
+    self.max_abs_delta_rho_list = []
     self.max_abs_dist_list  = []
-    self.max_abs_p_list  = []
+    self.max_abs_delta_p_list  = []
 
     for i in range(np.sum(self.num_sims)):
       print(f"\nProcessing sim {i}/{np.sum(self.num_sims)}\n", flush=True)
       self.process_sim(i)
 
-    self.max_abs_Ux = np.max(np.abs(self.max_abs_Ux_list))
-    self.max_abs_Uy = np.max(np.abs(self.max_abs_Uy_list))
+    self.max_abs_delta_Ux = np.max(np.abs(self.max_abs_delta_Ux_list))
+    self.max_abs_delta_Uy = np.max(np.abs(self.max_abs_delta_Uy_list))
+    self.max_abs_delta_rho = np.max(np.abs(self.max_abs_delta_rho_list))
     self.max_abs_dist = np.max(np.abs(self.max_abs_dist_list))
-    self.max_abs_p = np.max(np.abs(self.max_abs_p_list))
+    self.max_abs_delta_p = np.max(np.abs(self.max_abs_delta_p_list))
 
-    np.savetxt('maxs', [self.max_abs_Ux, self.max_abs_Uy, self.max_abs_dist, self.max_abs_p] )
+    np.savetxt('maxs', [self.max_abs_delta_Ux, self.max_abs_delta_Uy, self.max_abs_delta_rho, self.max_abs_dist, self.max_abs_delta_p] )
 
     return 0
 
@@ -348,25 +358,26 @@ class Training:
       for i in range(int(N//chunk_size)):
 
         f = tables.open_file(self.filename, mode='r')
-        x_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,0:2]
-        obst_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,2:3]
-        y_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,3:4]
+        x_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,0:3]
+        obst_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,3:4]
+        y_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,4:5]
         f.close()
 
         if x_array.shape[0] < max_num_PC:
           print('This chunck is too small ... skipping')
           break
 
-        x_array_flat = x_array.reshape((x_array.shape[0], x_array.shape[1]*x_array.shape[2], 2 ))
+        x_array_flat = x_array.reshape((x_array.shape[0], x_array.shape[1]*x_array.shape[2], 3 ))
 
         # Normalize to [-1,1]
-        x_array_flat1 = x_array_flat[...,0:1]/self.max_abs_Ux
-        x_array_flat2 = x_array_flat[...,1:2]/self.max_abs_Uy
+        x_array_flat1 = x_array_flat[...,0:1]/self.max_abs_delta_Ux
+        x_array_flat2 = x_array_flat[...,1:2]/self.max_abs_delta_Uy
+        x_array_flat3 = x_array_flat[...,2:3]/self.max_abs_delta_rho
         obst_array_flat = obst_array.reshape((obst_array.shape[0], obst_array.shape[1]*obst_array.shape[2], 1 ))/self.max_abs_dist
 
-        y_array_flat = y_array.reshape((y_array.shape[0], y_array.shape[1]*y_array.shape[2]))/self.max_abs_p
+        y_array_flat = y_array.reshape((y_array.shape[0], y_array.shape[1]*y_array.shape[2]))/self.max_abs_delta_p
 
-        input_flat = np.concatenate((x_array_flat1,x_array_flat2,obst_array_flat) , axis = -1)
+        input_flat = np.concatenate((x_array_flat1, x_array_flat2, x_array_flat3, obst_array_flat) , axis = -1)
         input_flat = input_flat.reshape((input_flat.shape[0],-1))
         y_flat = y_array_flat.reshape((y_array_flat.shape[0],-1)) 
 
@@ -412,26 +423,27 @@ class Training:
     for i in range(int(N//chunk_size)):
 
       f = tables.open_file(self.filename, mode='r')
-      x_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,0:2] # e.g. read from disk only this part of the dataset
-      obst_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,2:3]
-      y_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,3:4]
+      x_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,0:3]
+      obst_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,3:4]
+      y_array = f.root.data[i*chunk_size:(i+1)*chunk_size,:,:,4:5]
       f.close()
 
       if x_array.shape[0] < max_num_PC:
         print('This chunck is too small ... skipping')
         break
 
-      x_array_flat = x_array.reshape((x_array.shape[0], x_array.shape[1]*x_array.shape[2], 2 ))
+      x_array_flat = x_array.reshape((x_array.shape[0], x_array.shape[1]*x_array.shape[2], 3 ))
 
       # Normalize to [-1,1]
-      x_array_flat1 = x_array_flat[...,0:1]/self.max_abs_Ux
-      x_array_flat2 = x_array_flat[...,1:2]/self.max_abs_Uy
+      x_array_flat1 = x_array_flat[...,0:1]/self.max_abs_delta_Ux
+      x_array_flat2 = x_array_flat[...,1:2]/self.max_abs_delta_Uy
+      x_array_flat3 = x_array_flat[...,2:3]/self.max_abs_delta_rho
       obst_array_flat = obst_array.reshape((obst_array.shape[0], obst_array.shape[1]*obst_array.shape[2], 1 ))/self.max_abs_dist
 
-      input_flat = np.concatenate((x_array_flat1,x_array_flat2,obst_array_flat) , axis = -1)
+      input_flat = np.concatenate((x_array_flat1,x_array_flat2,x_array_flat3,obst_array_flat) , axis = -1)
       input_flat = input_flat.reshape((input_flat.shape[0],-1))
 
-      y_array_flat = y_array.reshape((y_array.shape[0], y_array.shape[1]*y_array.shape[2]))/self.max_abs_p
+      y_array_flat = y_array.reshape((y_array.shape[0], y_array.shape[1]*y_array.shape[2]))/self.max_abs_delta_p
 
       # Scatter input and output data
       input_dask_future = client.scatter(input_flat)
@@ -509,7 +521,7 @@ class Training:
     else:
       print('Blocks data is available... loading it\n')
       maxs = np.loadtxt('maxs')
-      self.max_abs_Ux, self.max_abs_Uy, self.max_abs_dist, self.max_abs_p = maxs[0], maxs[1], maxs[2], maxs[3]
+      self.max_abs_delta_Ux, self.max_abs_delta_Uy, self.max_abs_delta_rho, self.max_abs_dist, self.max_abs_delta_p = maxs
 
     if not (os.path.isfile(filename_flat) and os.path.isfile('ipca_input.pkl') and os.path.isfile('ipca_p.pkl')):
       print('Data after PCA is not available... Applying PCA \n')
@@ -672,7 +684,7 @@ if __name__ == '__main__':
   # Data-Processing Parameters
   n_samples = int(1e4) #no. of samples per simulation
   block_size = 128
-  delta = 5e-3
+  delta = 2.5e-4
   max_num_PC = 512 # to not exceed the width of the NN
   var_p = 0.95
   var_in = 0.95

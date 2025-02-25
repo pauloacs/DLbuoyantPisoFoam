@@ -20,4 +20,4 @@ mpirun  -np 4 buoyantPimpleFoam_write -parallel
 reconstructPar -newTimes
 postProcess -func writeCellCentres
 
-foamToVTK -useTimeName -noZero -ascii -noPointValues -fields '(delta_U delta_p_rgh U_non_cons p_rgh Cx Cy delta_U_prev delta_p_rgh_prev delta_pho)' -excludePatches '(inlet outlet defaultFaces)' > log.foamtoVTK
+foamToVTK -useTimeName -noZero -ascii -noPointValues -fields '(delta_U delta_p_rgh U_non_cons p_rgh Cx Cy delta_U_prev delta_p_rgh_prev delta_rho rho)' -excludePatches '(inlet outlet defaultFaces)' > log.foamtoVTK

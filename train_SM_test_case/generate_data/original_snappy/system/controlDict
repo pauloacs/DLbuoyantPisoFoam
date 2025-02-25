@@ -23,13 +23,13 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         0.2;//we stop after 5 s - adjustableRunTime!
+endTime         1;//we stop after 5 s - adjustableRunTime!  # should be 12.5
 
 deltaT          0.001;//initial time step size
 
 writeControl    adjustableRunTime;//simulation can automatically adjust the time step according to the Courant number
 
-writeInterval   0.1;//we write out every 0.05 s
+writeInterval   0.25;//we write out every 0.05 s
 
 purgeWrite      0;
 
@@ -54,8 +54,7 @@ adjustTimeStep  yes;//adjustableRunTime can modifiy the time step size
 //dt is the only value, which can guarantee this
 //dt is changed in each time step
 
-maxCo           0.5;//maximum value for Courant number
-maxAlphaCo      0.5;//maximum value for Courant number of the interface water/air
+maxCo           1;//maximum value for Courant number
 
 maxDeltaT       2e-3;//maximum time step
 

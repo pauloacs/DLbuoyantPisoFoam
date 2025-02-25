@@ -49,10 +49,10 @@ class Evaluation():
 			model_path (str): The path to the model.
 			max_num_PC (int): The maximum number of principal components.
 			standardization_method (str): The standardization method.
-			max_abs_Ux (float): The maximum absolute value of Ux.
-			max_abs_Uy (float): The maximum absolute value of Uy.
+			max_abs_delta_Ux (float): The maximum absolute value of delta Ux.
+			max_abs_delta_Uy (float): The maximum absolute value of delta Uy.
 			max_abs_dist (float): The maximum absolute value of dist.
-			max_abs_p (float): The maximum absolute value of p.
+			max_abs_delta_p (float): The maximum absolute value of delta p.
 			model (tf.keras.Model): The loaded model.
 			pcainput (pkl): The loaded pca input.
 			pcap (pkl): The loaded pca p.
@@ -69,7 +69,7 @@ class Evaluation():
 
 		maxs = np.loadtxt('maxs')
 
-		self.max_abs_Ux, self.max_abs_Uy, self.max_abs_dist, self.max_abs_p = maxs[0], maxs[1], maxs[2], maxs[3]
+		self.max_abs_delta_Ux, self.max_abs_delta_Uy, self.max_abs_delta_rho, self.max_abs_dist, self.max_abs_delta_p = maxs
 
 		#### loading the model #######
 		if 'MLP_attention_biased' in model_path:
@@ -221,7 +221,7 @@ class Evaluation():
 		for i in range(self.x_array.shape[0]):
 
 			idx_i, idx_j = indices_list[i]
-			flow_bool = self.x_array[i,:,:,2]
+			flow_bool = self.x_array[i,:,:,3]
 			pred_field = array[i,...]
 
 			## FIRST row
@@ -386,12 +386,14 @@ class Evaluation():
 		Ux =  data[i,j,:self.indice,0:1] #values
 		Uy =  data[i,j,:self.indice,1:2] #values
 
-		delta_U = data[i,j,:self.indice,5:7] #values
+		delta_U = data[i,j,:self.indice,5:7]
 		delta_Ux = delta_U[...,0:1]
 		delta_Uy = delta_U[...,1:2]
 
-		delta_U_prev = data[i,j,:self.indice, 8:10] #values
-		delta_p_prev = data[i,j,:self.indice,10:11] #values
+		delta_U_prev = data[i,j,:self.indice, 8:10]
+		delta_p_prev = data[i,j,:self.indice,10:11]
+		delta_rho = data[i,j,:self.indice,11:12]
+		rho = data[i,j,:self.indice,12:13]
 
 		# check where the deltaU has changed in the last time step
 		deltaU_changed = np.abs(delta_U - delta_U_prev).sum(axis=-1)
@@ -403,6 +405,7 @@ class Evaluation():
 
 		U_max_norm = np.max(np.sqrt(np.square(Ux) + np.square(Uy)))
 		deltaU_max_norm = np.max(np.sqrt(np.square(delta_Ux) + np.square(delta_Uy)))
+		max_rho = rho.max()
 
 		# Ignore time steps with minimal changes ...
 		# there is not point in computing error metrics for these
@@ -417,31 +420,35 @@ class Evaluation():
 		delta_p_adim = delta_p / pow(U_max_norm,2.0) 
 		delta_Ux_adim = delta_Ux/U_max_norm
 		delta_Uy_adim = delta_Uy/U_max_norm
+		delta_rho_adim = delta_rho/max_rho
 
 		delta_p_interp = utils.interpolate_fill(delta_p_adim, self.vert, self.weights)
 		delta_Ux_interp = utils.interpolate_fill(delta_Ux_adim, self.vert, self.weights)
 		delta_Uy_interp = utils.interpolate_fill(delta_Uy_adim, self.vert, self.weights)
+		delta_rho_interp = utils.interpolate_fill(delta_rho_adim, self.vert, self.weights)
 		p_interp = utils.interpolate_fill(p, self.vert, self.weights)
 
 		# weighting 
 		deltaU_changed_interp = utils.interpolate_fill(deltaU_changed, self.vert, self.weights)
 		delta_p_prev_interp = utils.interpolate_fill(delta_p_prev, self.vert, self.weights)
 
-		grid = np.zeros(shape=(1, self.grid_shape_y, self.grid_shape_x, 5))
+		grid = np.zeros(shape=(1, self.grid_shape_y, self.grid_shape_x, 6))
 
 		grid[0,:,:,0:1][tuple(self.indices.T)] = delta_Ux_interp.reshape(delta_Ux_interp.shape[0], 1)
 		grid[0,:,:,1:2][tuple(self.indices.T)] = delta_Uy_interp.reshape(delta_Uy_interp.shape[0], 1)
-		grid[0,:,:,2:3] = self.sdfunct
-		grid[0,:,:,3:4][tuple(self.indices.T)] = delta_p_interp.reshape(delta_p_interp.shape[0], 1)
-		grid[0,:,:,4:5][tuple(self.indices.T)] = p_interp.reshape(p_interp.shape[0], 1)
+		grid[0,:,:,2:3][tuple(self.indices.T)] = delta_rho_interp.reshape(delta_rho_interp.shape[0], 1)
+		grid[0,:,:,3:4] = self.sdfunct
+		grid[0,:,:,4:5][tuple(self.indices.T)] = delta_p_interp.reshape(delta_p_interp.shape[0], 1)
+		grid[0,:,:,5:6][tuple(self.indices.T)] = p_interp.reshape(p_interp.shape[0], 1)
 
 		grid[np.isnan(grid)] = 0 #set any nan value to 0
 
 		## Rescale all the variables to [-1,1]
-		grid[0,:,:,0:1] = grid[0,:,:,0:1]/self.max_abs_Ux
-		grid[0,:,:,1:2] = grid[0,:,:,1:2]/self.max_abs_Uy
-		grid[0,:,:,2:3] = grid[0,:,:,2:3]/self.max_abs_dist
-		grid[0,:,:,3:4] = grid[0,:,:,3:4]/self.max_abs_p
+		grid[0,:,:,0:1] = grid[0,:,:,0:1]/self.max_abs_delta_Ux
+		grid[0,:,:,1:2] = grid[0,:,:,1:2]/self.max_abs_delta_Uy
+		grid[0,:,:,2:3] = grid[0,:,:,2:3]/self.max_abs_delta_rho
+		grid[0,:,:,3:4] = grid[0,:,:,3:4]/self.max_abs_dist
+		grid[0,:,:,4:5] = grid[0,:,:,4:5]/self.max_abs_delta_p
 
 		# saving for weighting procedure
 		deltaU_change_grid = np.zeros(shape=(self.grid_shape_y, self.grid_shape_x))
@@ -473,8 +480,8 @@ class Evaluation():
 				if i == n_y + 1: y_0 = grid.shape[1]-shape
 				y_f = y_0 + shape
 
-				x_list.append(grid[0:1, y_0:y_f, x_0:x_f, 0:3])
-				y_list.append(grid[0:1, y_0:y_f, x_0:x_f, 3:4])
+				x_list.append(grid[0:1, y_0:y_f, x_0:x_f, 0:4])
+				y_list.append(grid[0:1, y_0:y_f, x_0:x_f, 4:5])
 
 				indices_list.append([i, n_x - j])
 
@@ -486,7 +493,7 @@ class Evaluation():
 		features = self.x_array.shape[3]
 		
 		for step in range(y_array.shape[0]):
-			y_array[step,...,0][self.x_array[step,...,2] != 0] -= np.mean(y_array[step,...,0][self.x_array[step,...,2] != 0])
+			y_array[step,...,0][self.x_array[step,...,3] != 0] -= np.mean(y_array[step,...,0][self.x_array[step,...,3] != 0])
 
 		x_array_flat = self.x_array.reshape((N, self.x_array.shape[1]*self.x_array.shape[2], features ))
 		input_flat = x_array_flat.reshape((x_array_flat.shape[0],-1))
@@ -548,11 +555,11 @@ class Evaluation():
 		## Dimensionalize pressure field - There is no need to dimensionalize the pressure field here
 		## As we can compare it to the reference non-dimensionalized field
 		## This only needs to be done when calling the SM in the CFD solver
-		res_concat = res_concat  * self.max_abs_p * pow(U_max_norm,2.0)
+		res_concat = res_concat  * self.max_abs_delta_p * pow(U_max_norm,2.0)
 
 		## Here compute the error only based on the blocks pressure fields - before the assembly
-		flow_bool = self.x_array[...,2:3] != 0
-		pred_minus_true_block, pred_minus_true_squared_block = utils.compute_in_block_error(res_concat, y_array * self.max_abs_p * pow(U_max_norm,2.0), flow_bool)
+		flow_bool = self.x_array[...,3:4] != 0
+		pred_minus_true_block, pred_minus_true_squared_block = utils.compute_in_block_error(res_concat, y_array * self.max_abs_delta_p * pow(U_max_norm,2.0), flow_bool)
 		self.pred_minus_true_block.append(pred_minus_true_block)
 		self.pred_minus_true_squared_block.append(pred_minus_true_squared_block)
 		
@@ -585,9 +592,8 @@ class Evaluation():
 			# option 2: use the change in deltap
 			field_deltap = deltaP_prev_grid + change_in_deltap
 			
-		cfd_results = grid[0,:,:,3] * self.max_abs_p * pow(U_max_norm,2.0)
-		no_flow_bool = grid[0,:,:,2] == 0
-
+		cfd_results = grid[0,:,:,4] * self.max_abs_delta_p * pow(U_max_norm,2.0)
+		no_flow_bool = grid[0,:,:,3] == 0
 
 		if save_plots or show_plots:
 			# Plotting the integrated pressure field
@@ -641,7 +647,7 @@ class Evaluation():
 		## grid[...,4] is p without being normalized to [0,1]
 		## grid[...,3] was normalized ...
 
-		p_prev = grid[0,:,:,4] - cfd_results
+		p_prev = grid[0,:,:,5] - cfd_results
 		p_pred = p_prev + field_deltap
 
 		if save_plots or show_plots:
@@ -653,12 +659,12 @@ class Evaluation():
 			cf = axs[0].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin )
 			plt.colorbar(cf, ax=axs[0])
 
-			masked_arr = np.ma.array(grid[0,:,:,4], mask=no_flow_bool)
+			masked_arr = np.ma.array(grid[0,:,:,5], mask=no_flow_bool)
 			axs[1].set_title('Pressure (CFD)', fontsize = 15)
 			cf = axs[1].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin)
 			plt.colorbar(cf, ax=axs[1])
 
-			masked_arr = np.ma.array( np.abs(( grid[0,:,:,4] - p_pred )/(np.max(grid[0,:,:,4]) -np.min(grid[0,:,:,4]))*100) , mask=no_flow_bool)
+			masked_arr = np.ma.array( np.abs(( grid[0,:,:,5] - p_pred )/(np.max(grid[0,:,:,5]) -np.min(grid[0,:,:,5]))*100) , mask=no_flow_bool)
 
 			axs[2].set_title('error in %', fontsize = 15)
 			cf = axs[2].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = 2, vmin=0 )
@@ -677,15 +683,18 @@ class Evaluation():
 			fig, axs = plt.subplots(3,1, figsize=(65, 15))
 
 			masked_arr = np.ma.array(grid[0,:,:,0], mask=no_flow_bool)
+			axs[0].set_title('Ux', fontsize=15)
 			cf = axs[0].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin )
 			plt.colorbar(cf, ax=axs[0])
 
 			masked_arr = np.ma.array(grid[0,:,:,1], mask=no_flow_bool)
+			axs[0].set_title('Uy', fontsize=15)
 			cf = axs[1].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin)
 			plt.colorbar(cf, ax=axs[1])
 
-			masked_arr = np.ma.array( grid[0,:,:,2] , mask=no_flow_bool)
-			cf = axs[2].imshow(masked_arr, interpolation='nearest', cmap='viridis', vmax = 10, vmin=0 )
+			masked_arr = np.ma.array(grid[0,:,:,2] , mask=no_flow_bool)
+			axs[0].set_title('density', fontsize=15)
+			cf = axs[2].imshow(masked_arr, interpolation='nearest', cmap='viridis') #, vmax = 10, vmin=0 )
 			plt.colorbar(cf, ax=axs[2])
 
 		if save_plots:
@@ -747,7 +756,7 @@ class Evaluation():
 
 		## Error in p
 
-		true_masked = grid[0,:,:,4][~no_flow_bool]
+		true_masked = grid[0,:,:,5][~no_flow_bool]
 		pred_masked = p_pred[~no_flow_bool]
 
 		norm_true = np.max(true_masked) - np.min(true_masked)
