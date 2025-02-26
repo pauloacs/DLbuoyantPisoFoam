@@ -1,3 +1,6 @@
+U_MAX_NORM = 0.0;
+RHO_MAX = 0.0;
+
 forAll(delta_p_rgh.internalField(), id) // for boundary field use u_.boundaryField()
 {
         input_vals[id][0] = delta_U[id].x();
@@ -11,18 +14,20 @@ forAll(delta_p_rgh.internalField(), id) // for boundary field use u_.boundaryFie
 
         // Calculate the maximum norm of U for the current time step
         // To enable non-dimensionalization of the velocity field
+        // Same for \rho
         double u_norm = std::sqrt( std::pow(U[id].x(), 2) + std::pow(U[id].y(), 2) );
         U_MAX_NORM = std::max(U_MAX_NORM, u_norm);
-        U_MAX_NORM = std::max(U_MAX_NORM, u_norm);
+        RHO_MAX = std::max(RHO_MAX, thermo.rho());
 }
 
 
-PyObject *array_2d = PyArray_SimpleNewFromData(2, dim, NPY_DOUBLE, &input_vals[0]);
+PyObject *array_2d = PyArray_SimpleNewFromData(3, dim, NPY_DOUBLE, &input_vals[0]);
 
 Info<< ">>> Setting arguments <<<" << endl;
 
 PyTuple_SetItem(py_args, 0, array_2d);
 PyTuple_SetItem(py_args, 1, PyFloat_FromDouble(U_MAX_NORM));
+PyTuple_SetItem(py_args, 2, PyFloat_FromDouble(RHO_MAX));
 
 Info<< ">>> Calling python function <<<" << endl;
 

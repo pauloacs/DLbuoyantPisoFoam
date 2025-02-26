@@ -45,7 +45,7 @@ boundaryField
     geometry_obstacle
     {
         type            fixedValue;
-        value           uniform 373.15;
+        value           uniform 473.15;
     }
 }
 

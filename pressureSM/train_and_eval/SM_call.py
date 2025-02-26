@@ -683,17 +683,17 @@ class Evaluation():
 			fig, axs = plt.subplots(3,1, figsize=(65, 15))
 
 			masked_arr = np.ma.array(grid[0,:,:,0], mask=no_flow_bool)
-			axs[0].set_title('Ux', fontsize=15)
+			axs[0].set_title(r'\Delta U_x', fontsize=15)
 			cf = axs[0].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin )
 			plt.colorbar(cf, ax=axs[0])
 
 			masked_arr = np.ma.array(grid[0,:,:,1], mask=no_flow_bool)
-			axs[0].set_title('Uy', fontsize=15)
+			axs[0].set_title(r'\Delta U_y', fontsize=15)
 			cf = axs[1].imshow(masked_arr, interpolation='nearest', cmap='viridis')#, vmax = vmax, vmin = vmin)
 			plt.colorbar(cf, ax=axs[1])
 
 			masked_arr = np.ma.array(grid[0,:,:,2] , mask=no_flow_bool)
-			axs[0].set_title('density', fontsize=15)
+			axs[0].set_title(r'\Delta \rho', fontsize=15)
 			cf = axs[2].imshow(masked_arr, interpolation='nearest', cmap='viridis') #, vmax = 10, vmin=0 )
 			plt.colorbar(cf, ax=axs[2])
 
