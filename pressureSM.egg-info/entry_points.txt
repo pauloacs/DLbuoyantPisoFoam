@@ -1,6 +1,0 @@
-[console_scripts]
-evaluation_3d = pressureSM.train_and_eval_3d.entry_point:eval_entry_point
-evaluation_script = pressureSM.train_and_eval.entry_point:eval_entry_point
-train_3d = pressureSM.train_and_eval_3d.entry_point:train_entry_point
-train_3d_optimized = pressureSM.train_and_eval_3d.entry_point:train_entry_point_optimized
-train_script_bouyant = pressureSM.train_and_eval.entry_point:train_entry_point
