@@ -1,6 +1,8 @@
     // Solve the Momentum equation
 
-    U_prev = U;
+    if (pimple.firstPimpleIter()){
+        U_prev = U;
+    }
 
     MRF.correctBoundaryVelocity(U);
 
@@ -37,6 +39,9 @@
         K = 0.5*magSqr(U);
     }
 
-    U_non_cons = U;
+    if (pimple.firstPimpleIter()){
+        U_non_cons = U;
+        delta_U = U - U_prev;
+    }
+
     
-    delta_U = U - U_prev;

@@ -10,20 +10,29 @@ grading = 3
 # Regarding the channel lengths, it is defined in the gen_blockMeshDict_plate
 # Those are domain_length = 0.75, domain_height = 0.1
 
-# These are plate lengths - L, b
-# Geometry variables
-L = [0.0375] * 18
-alpha = [80, 60] * 9
-b = [0.0025] * 18
-x_cord = [0.2] * 18
-
 # Flow condition variables - Re and Ec
-U_inlet = [0.075, 0.75, 7.5] * 6
-T_obst = [115 + 273.15, 215 + 273.15, 415 + 273.15] * 6
-T_inlet = [15 + 273.15] * 18
+U_inlet =np.array([0.1, 0.2, 0.5, 0.75, 1, 2, 5, 7.5, 10, 15])
 
-delta_T_write = np.round(np.array(L) / np.array(U_inlet), 3)
-end_time = delta_T_write * 50
+T_inlet = np.array([15] * 10) + 273.15
+Delta_T = np.array([150, 200, 250, 200, 150, 300, 250, 300, 200, 150])
+T_obst = T_inlet + Delta_T
+
+# These are plate lengths - L, b
+# For reference, H (distance between walls) = 0.1
+# Geometry variables
+L = np.array([0.0375] * 10)
+alpha = [70, 50, 80, 40, 60, 80, 50, 60, 70, 40]
+b = [0.0025] * 10
+x_cord = [0.2] * 10
+
+Re = (U_inlet * L * 1.269 / 1.716 * 1E5).round(0)
+Ec = U_inlet**2 / (1005 * Delta_T)
+
+print(f'Re numbers: {list(Re)}')
+print(f'Ec numbers: {list(Ec)}')
+
+delta_T_write = np.round(np.array(L) / np.array(U_inlet), 4)
+end_time = delta_T_write * 25
 
 num_runs = len(L)
 sim_data_path = 'simulation_data'

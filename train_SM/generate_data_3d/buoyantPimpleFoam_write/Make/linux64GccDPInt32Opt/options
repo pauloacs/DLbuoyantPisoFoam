@@ -1,0 +1,56 @@
+# 1 "Make/options"
+# 1 "<built-in>"
+# 1 "<command-line>"
+# 8 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3 4
+
+# 17 "/usr/include/stdc-predef.h" 3 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 8 "<command-line>" 2
+# 1 "Make/options"
+EXE_INC = -I. -I$(WM_PROJECT_DIR)/applications/solvers/compressible/rhoPimpleFoam -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude -I$(LIB_SRC)/radiationModels/lnInclude -I$(LIB_SRC)/MomentumTransportModels/momentumTransportModels/lnInclude -I$(LIB_SRC)/MomentumTransportModels/compressible/lnInclude -I$(LIB_SRC)/ThermophysicalTransportModels/lnInclude -I$(LIB_SRC)/finiteVolume/cfdTools -I$(LIB_SRC)/finiteVolume/lnInclude -I$(LIB_SRC)/meshTools/lnInclude -I$(LIB_SRC)/sampling/lnInclude -I$(LIB_SRC)/dynamicFvMesh/lnInclude
+# 14 "Make/options"
+
+EXE_LIBS = -lfluidThermophysicalModels -lradiationModels -lspecie -lmomentumTransportModels -lfluidThermoMomentumTransportModels -lthermophysicalTransportModels -lfiniteVolume -ldynamicFvMesh -ltopoChangerFvMesh -lmeshTools -lsampling -lfvOptions

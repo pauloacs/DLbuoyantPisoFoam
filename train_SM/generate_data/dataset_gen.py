@@ -19,8 +19,9 @@ def extract_simulation_data_bound(serial, patch, path_to_sims, total_times, delt
     data = { 'Cx': [], 'Cy': [] }
     for entity in ['Cx', 'Cy']:
       for time in range(int(total_times)):
-        vtk_list = []
-        t = round(deltat*(time*avance+1)*100)/100
+
+        #t = deltat*(time*avance+1)
+        t = round(deltat*(time*avance+1)*10000)/10000
         if t % 1 == 0 :
           t = round(t)
 
@@ -32,17 +33,17 @@ def extract_simulation_data_bound(serial, patch, path_to_sims, total_times, delt
             print('Probably it corresponds to a steady state simulation - not saving more data for this simulation')
             continue
         mesh_cell_data = pv.read(path).cell_data
-        vtk_list.append(mesh_cell_data[entity])
 
-        data[entity].append(padding(np.concatenate(vtk_list) ,max))
+        data[entity].append(padding(mesh_cell_data[entity] ,max))
     return data
 
 def extract_simulation_data(serial, path_to_sims, total_times, deltat, avance, max):
     data = {'Ux': [], 'Uy': [], 'p_rgh': [], 'Cx': [], 'Cy': [], 'delta_Ux': [], 'delta_Uy': [], 'delta_p_rgh': [], 'delta_Ux_prev': [], 'delta_Uy_prev': [], 'delta_p_rgh_prev': [], 'delta_rho': [], 'rho':[]}
     for entity in ['p_rgh', 'U_non_cons', 'Cx', 'Cy', 'delta_U', 'delta_p_rgh', 'delta_U_prev', 'delta_p_rgh_prev', 'delta_rho', 'rho']:
       for time in range(int(total_times)):
-        vtk_list = []
-        t = round(deltat*(time*avance+1)*100)/100
+
+        #t = round(deltat*(time*avance+1)*100)/100
+        t = round(deltat*(time*avance+1)*10000)/10000
         if t % 1 == 0 :
           t = round(t)
         path = f"{path_to_sims}/{serial}/VTK/{serial}_{t}.vtk"
@@ -52,22 +53,20 @@ def extract_simulation_data(serial, path_to_sims, total_times, deltat, avance, m
             print('Probably it corresponds to a steady state simulation - not saving more data for this simulation')
             continue
         mesh_cell_data = pv.read(path).cell_data
-        vtk_list.append(mesh_cell_data[entity])
 
         if entity == 'U_non_cons':
-            data['Ux'].append(padding(np.concatenate(vtk_list)[:,0],max))
-            data['Uy'].append(padding(np.concatenate(vtk_list)[:,1],max))
+            data['Ux'].append(padding(mesh_cell_data[entity][:,0],max))
+            data['Uy'].append(padding(mesh_cell_data[entity][:,1],max))
         elif entity == 'delta_U':
-            data['delta_Ux'].append(padding(np.concatenate(vtk_list)[:,0],max))
-            data['delta_Uy'].append(padding(np.concatenate(vtk_list)[:,1],max))
+            data['delta_Ux'].append(padding(mesh_cell_data[entity][:,0],max))
+            data['delta_Uy'].append(padding(mesh_cell_data[entity][:,1],max))
         elif entity == 'delta_U_prev':
-            data['delta_Ux_prev'].append(padding(np.concatenate(vtk_list)[:,0],max))
-            data['delta_Uy_prev'].append(padding(np.concatenate(vtk_list)[:,1],max))
+            data['delta_Ux_prev'].append(padding(mesh_cell_data[entity][:,0],max))
+            data['delta_Uy_prev'].append(padding(mesh_cell_data[entity][:,1],max))
         else:
             extent = 0, 3, 0, 1
-            if entity == 'delta_p_rgh_prev':
-              print(vtk_list)
-            data[entity].append(padding(np.concatenate(vtk_list), max))
+#            if entity == 'delta_p_rgh_prev':
+            data[entity].append(padding(mesh_cell_data[entity], max))
     return data
 
 def create_hdf5_file(hdf5_path, num_sims_actual, total_times, max_n_cells_sim, max_n_cells_patch):
@@ -83,13 +82,25 @@ def create_hdf5_file(hdf5_path, num_sims_actual, total_times, max_n_cells_sim, m
 
     return hdf5_file
 
-def process_simulation(sim, path_to_sims, deltat_write, avance_list, hdf5_file, total_times, max_sim, max_patch):
-    deltat = deltat_write[sim]
+def process_simulation(sim, path_to_sims, avance_list, hdf5_file, total_times, max_sim, max_patch):
+
+    sim += 1
+
+    # Read the deltaT_write
+    control_dict_path = f"{path_to_sims}/{sim}/system/controlDict"
+    with open(control_dict_path, 'r') as file:
+        for line in file:
+            if 'writeInterval' in line:
+                deltat = float(line.split()[1].strip(';'))
+                break       
+
     avance = avance_list[sim]
 
     data = extract_simulation_data(sim, path_to_sims, total_times, deltat, avance, max_sim)
     data_top = extract_simulation_data_bound(sim, 'geometry_top', path_to_sims, total_times, deltat, avance, max_patch)
     data_obst = extract_simulation_data_bound(sim, 'geometry_obstacle', path_to_sims, total_times, deltat, avance, max_patch)
+
+    sim -= 1
 
     hdf5_file['sim_data'][sim, ..., 0] = data['Ux']
     hdf5_file['sim_data'][sim, ..., 1] = data['Uy']
@@ -113,20 +124,19 @@ def process_simulation(sim, path_to_sims, deltat_write, avance_list, hdf5_file, 
     hdf5_file.flush()
 
 def main():
-    num_sims_actual = 1
-    total_times = 4
+    num_sims_actual = 3
+    total_times = 10
     hdf5_path = 'dataset_plate_heat.hdf5'
     path_to_sims = 'simulation_data/'
-    max_n_cells_sim = 150000
+    max_n_cells_sim = 200000
     max_n_cells_patch = 50000
 
-    deltat_write = [0.25] * 4 # + [0.75] * 10 + [1] * 10 + [1.25] * 10 + [1.5] * 10
     avance_list = [1] * 4 #* 50
 
     hdf5_file = create_hdf5_file(hdf5_path, num_sims_actual, total_times, max_n_cells_sim, max_n_cells_patch)
 
     for sim in tqdm(range(num_sims_actual)):
-        process_simulation(sim, path_to_sims, deltat_write, avance_list, hdf5_file, total_times, max_n_cells_sim, max_n_cells_patch)
+        process_simulation(sim, path_to_sims, avance_list, hdf5_file, total_times, max_n_cells_sim, max_n_cells_patch)
 
     hdf5_file.close()
 

@@ -614,7 +614,7 @@ class Evaluation():
 
 			masked_arr = np.ma.array( np.abs(( cfd_results - field_deltap )/(np.max(cfd_results) -np.min(cfd_results))*100) , mask=no_flow_bool)
 			axs[2,0].set_title('error in %', fontsize = 15)
-			cf = axs[2,0].imshow(masked_arr, interpolation='nearest', cmap='viridis', vmax = 10, vmin=0 )
+			cf = axs[2,0].imshow(masked_arr, interpolation='nearest', cmap='viridis', vmax = 25, vmin=0 )
 			plt.colorbar(cf, ax=axs[2,0])
 
 			# deltaP values without weighting
@@ -630,7 +630,7 @@ class Evaluation():
 
 			masked_arr = np.ma.array( np.abs(( cfd_results - deltap_res )/(np.max(cfd_results) -np.min(cfd_results))*100) , mask=no_flow_bool)
 			axs[2,1].set_title('error in %', fontsize = 15)
-			cf = axs[2,1].imshow(masked_arr, interpolation='nearest', cmap='viridis', vmax = 10, vmin=0 )
+			cf = axs[2,1].imshow(masked_arr, interpolation='nearest', cmap='viridis', vmax = 25, vmin=0 )
 			plt.colorbar(cf, ax=axs[2,1])
 
 		if show_plots:

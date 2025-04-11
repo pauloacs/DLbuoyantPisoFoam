@@ -290,7 +290,7 @@ class Training:
 
     print(f"Writting t{j+self.first_t} to {self.filename}", flush=True)
     file = tables.open_file(self.filename, mode='a')
-    file.root.data.append(np.array(unique_array, dtype = 'float16'))
+    file.root.data.append(np.array(unique_array, dtype = 'float32'))
     file.close()
 
 ####################################################################

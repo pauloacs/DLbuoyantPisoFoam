@@ -1,0 +1,107 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "rho.*"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-6;
+        relTol          0;
+    }
+
+    p_rgh
+    {
+        solver          GAMG;
+        tolerance       1e-08;
+        relTol          0;
+        smoother        DIC;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        cacheAgglomeration true;
+        nCellsInCoarsestLevel 600;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        minIter         2;
+        maxIter         6;
+    }
+    p_rghFinal
+    {
+        solver          PCG;
+        preconditioner
+        {
+            preconditioner  GAMG;
+            tolerance       1e-08;
+            relTol          0;
+            nVcycles        2;
+            smoother        DICGaussSeidel;
+            nPreSweeps      2;
+            nPostSweeps     2;
+            nFinestSweeps   2;
+            cacheAgglomeration true;
+            nCellsInCoarsestLevel 600;
+            agglomerator    faceAreaPair;
+            mergeLevels     1;
+            minIter         2;
+            maxIter         10;
+        }
+        tolerance       1e-08;
+        relTol          0;
+        maxIter         6;
+    }
+    "(U|h)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-6;
+        relTol          0;
+        nSweeps         2;
+    }
+    "(U|h)Final"
+    {
+        $U;
+        tolerance       1e-8;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    nOuterCorrectors     2;
+    nCorrectors          3;
+    nNonOrthogonalCorrectors 1;
+    pRefCell             0;
+    pRefValue            1e5;
+}
+
+relaxationFactors
+{
+    // fields
+    // {
+    //     p_rgh     0.3;
+    //     h         0.7;
+    // }
+
+    // equations
+    // {
+    //     U         0.7;
+    // }
+}
+
+// ************************************************************************* //
