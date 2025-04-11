@@ -1,0 +1,37 @@
+# Ignore cache files
+*.cache
+*.pyc
+*.pyo
+__pycache__/
+
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# Ignore log files
+*.log
+
+# Ignore build artifacts
+build/
+dist/
+*.o
+*.so
+*.a
+*.out
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore version control files
+*.git/
+
+# Ignore dataset files
+dataset*.hdf5
+
+train_SM*
+!train_SM_example
+!train_SM_3d_example
